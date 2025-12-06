@@ -1,7 +1,20 @@
 import axios from 'axios'
 
+// chave para gravar o token no localStorage
+export const TOKEN_KEY = 'aftersports:token'
+
 const api = axios.create({
-  baseURL: '',
+  baseURL: '', // usamos o proxy do Vite (/api -> 8080)
+})
+
+// injeta Authorization quando houver token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY)
+  if (token) {
+    config.headers = config.headers ?? {}
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
 })
 
 api.interceptors.response.use(

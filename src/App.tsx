@@ -5,11 +5,14 @@ import InstructorsPage from './pages/InstructorsPage'
 import LessonsPage from './pages/LessonsPage'
 import LessonDetailsPage from './pages/LessonDetailsPage'
 import BookingsPage from './pages/BookingsPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import { AuthProvider } from './auth/AuthContext'
 import './App.css'
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <Navbar />
       <main className="container">
         <Routes>
@@ -18,9 +21,12 @@ function App() {
           <Route path="/lessons" element={<LessonsPage />} />
           <Route path="/lessons/:id" element={<LessonDetailsPage />} />
           <Route path="/bookings" element={<BookingsPage />} />
+
+          <Route path="/entrar" element={<LoginPage />} />
+          <Route path="/cadastrar" element={<RegisterPage />} />
         </Routes>
       </main>
-    </>
+    </AuthProvider>
   )
 }
 

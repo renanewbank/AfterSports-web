@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ErrorMessage from '../components/ErrorMessage'
 import Loader from '../components/Loader'
@@ -7,8 +7,10 @@ import { del, get, post, put } from '../lib/api'
 import { formatDateTime, formatPrice } from '../lib/format'
 import type { InstructorDTO, LessonCreate, LessonDTO, LessonUpdate } from '../types/dto'
 import LessonForm from './LessonForm'
+import { AuthContext } from '../auth/AuthContext'
 
 const LessonsPage = () => {
+  const { user } = useContext(AuthContext)
   const [lessons, setLessons] = useState<LessonDTO[]>([])
   const [instructors, setInstructors] = useState<InstructorDTO[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,47 +103,63 @@ const LessonsPage = () => {
       label: 'Lat/Lon',
       render: (row: LessonDTO) => `${row.lat}, ${row.lon}`,
     },
-    {
-      key: 'actions',
-      label: 'Ações',
-      render: (row: LessonDTO) => (
-        <div className="inline-actions">
-          <Link className="ghost-btn" to={`/lessons/${row.id}`}>
-            Detalhes
-          </Link>
-          <button
-            className="ghost-btn"
-            onClick={() => {
-              setEditing(row)
-              setShowForm(true)
-            }}
-          >
-            Editar
-          </button>
-          <button className="ghost-btn" onClick={() => handleDelete(row.id)}>
-            Excluir
-          </button>
-        </div>
-      ),
-    },
+    ...(user
+      ? [
+          {
+            key: 'actions',
+            label: 'Ações',
+            render: (row: LessonDTO) => (
+              <div className="inline-actions">
+                <Link className="ghost-btn" to={`/lessons/${row.id}`}>
+                  Detalhes
+                </Link>
+                <button
+                  className="ghost-btn"
+                  onClick={() => {
+                    setEditing(row)
+                    setShowForm(true)
+                  }}
+                >
+                  Editar
+                </button>
+                <button className="ghost-btn" onClick={() => handleDelete(row.id)}>
+                  Excluir
+                </button>
+              </div>
+            ),
+          },
+        ]
+      : [
+          {
+            key: 'ver',
+            label: 'Ação',
+            render: (row: LessonDTO) => (
+              <Link className="ghost-btn" to={`/lessons/${row.id}`}>
+                Detalhes
+              </Link>
+            ),
+          },
+        ]),
   ]
 
   return (
     <div className="section">
       <div className="page-title">
         <div>
-          {/* <p className="pill">Aulas</p> */}
+          <p className="pill">Aulas</p>
           <h2>Gerencie aulas</h2>
         </div>
-        <button
-          className="primary-btn"
-          onClick={() => {
-            setEditing(null)
-            setShowForm(true)
-          }}
-        >
-          Nova Aula
-        </button>
+        {user && (
+          <button
+            className="primary-btn"
+            onClick={() => {
+              setEditing(null)
+              setShowForm(true)
+            }}
+          >
+            Nova Aula
+          </button>
+        )}
       </div>
 
       <div className="card section">
@@ -184,10 +202,15 @@ const LessonsPage = () => {
       ) : (
         <div className="card section">
           <Table data={lessons} columns={columns} getKey={(row) => row.id} />
+          {!user && (
+            <p className="muted" style={{ marginTop: '0.5rem' }}>
+              Para criar/editar/excluir aulas, faça login.
+            </p>
+          )}
         </div>
       )}
 
-      {showForm && (
+      {user && showForm && (
         <div className="card section">
           <h3>{editing ? 'Editar aula' : 'Nova aula'}</h3>
           <LessonForm

@@ -42,3 +42,16 @@ export type WeatherSummary = {
   precipitationProbability: number | null
   summary: string
 }
+
+/** ==== Auth ==== */
+export type UserDTO = {
+  id: number
+  name: string
+  email: string
+  role: 'USER' | 'ADMIN'
+}
+
+export type AuthResponse = {
+  token: string
+  user: UserDTO
+}

@@ -1,14 +1,15 @@
 import type { FormEvent } from 'react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import ErrorMessage from '../components/ErrorMessage'
 import FormField from '../components/FormField'
 import Loader from '../components/Loader'
 import Table from '../components/Table'
-import { del, get, post } from '../lib/api'
+import { get, post } from '../lib/api'
 import { formatDateTime, formatInstantToLocal, formatPrice } from '../lib/format'
 import type { BookingCreate, BookingDTO, LessonDTO, WeatherSummary } from '../types/dto'
+import { AuthContext } from '../auth/AuthContext'
 
 const bookingSchema = z.object({
   studentName: z.string().trim().min(1, 'Nome obrigatório'),
@@ -18,6 +19,7 @@ const bookingSchema = z.object({
 type BookingForm = z.infer<typeof bookingSchema>
 
 const LessonDetailsPage = () => {
+  const { user } = useContext(AuthContext)
   const { id } = useParams()
   const lessonId = Number(id)
   const [lesson, setLesson] = useState<LessonDTO | null>(null)
@@ -112,17 +114,6 @@ const LessonDetailsPage = () => {
     }
   }
 
-  const cancelBooking = async (idToCancel: number) => {
-    const ok = window.confirm('Cancelar esta reserva?')
-    if (!ok) return
-    try {
-      await del(`/api/bookings/${idToCancel}`)
-      await fetchBookings()
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao cancelar reserva.')
-    }
-  }
-
   if (!lessonId) {
     return <ErrorMessage message="ID da aula inválido." />
   }
@@ -203,50 +194,47 @@ const LessonDetailsPage = () => {
           <h3>Reservas desta aula</h3>
         </div>
 
-        {/* Form para criar novas reservas */}
-        <form className="form" onSubmit={handleBookingSubmit}>
-          <div
-            className="grid"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}
-          >
-            <FormField
-              label="Nome do aluno"
-              htmlFor="studentName"
-              error={bookingErrors.studentName}
-            >
-              <input
-                id="studentName"
-                value={bookingValues.studentName}
-                onChange={(e) =>
-                  setBookingValues({ ...bookingValues, studentName: e.target.value })
-                }
-                placeholder="Ex.: João Souza"
-              />
-            </FormField>
-            <FormField
-              label="E-mail"
-              htmlFor="studentEmail"
-              error={bookingErrors.studentEmail}
-            >
-              <input
-                id="studentEmail"
-                type="email"
-                value={bookingValues.studentEmail}
-                onChange={(e) =>
-                  setBookingValues({ ...bookingValues, studentEmail: e.target.value })
-                }
-                placeholder="email@dominio.com"
-              />
-            </FormField>
-          </div>
-          <div className="actions">
-            <button className="primary-btn" type="submit" disabled={submitting}>
-              {submitting ? 'Enviando...' : 'Criar reserva'}
-            </button>
-          </div>
-        </form>
+        {user ? (
+          <form className="form" onSubmit={handleBookingSubmit}>
+            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+              <FormField label="Nome do aluno" htmlFor="studentName" error={bookingErrors.studentName}>
+                <input
+                  id="studentName"
+                  value={bookingValues.studentName}
+                  onChange={(e) =>
+                    setBookingValues({ ...bookingValues, studentName: e.target.value })
+                  }
+                  placeholder="Ex.: João Souza"
+                />
+              </FormField>
+              <FormField
+                label="E-mail"
+                htmlFor="studentEmail"
+                error={bookingErrors.studentEmail}
+              >
+                <input
+                  id="studentEmail"
+                  type="email"
+                  value={bookingValues.studentEmail}
+                  onChange={(e) =>
+                    setBookingValues({ ...bookingValues, studentEmail: e.target.value })
+                  }
+                  placeholder="email@dominio.com"
+                />
+              </FormField>
+            </div>
+            <div className="actions">
+              <button className="primary-btn" type="submit" disabled={submitting}>
+                {submitting ? 'Enviando...' : 'Criar reserva'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <p className="muted">
+            Para criar uma reserva, <Link to="/entrar">faça login</Link>.
+          </p>
+        )}
 
-        {/* Tabela de reservas com botão Cancelar */}
         {loadingBookings ? (
           <Loader />
         ) : bookings.length ? (
@@ -254,21 +242,13 @@ const LessonDetailsPage = () => {
             data={bookings}
             columns={[
               { key: 'id', label: 'ID' },
+              { key: 'lessonId', label: 'Aula' },
               { key: 'studentName', label: 'Aluno' },
               { key: 'studentEmail', label: 'E-mail' },
               {
                 key: 'createdAt',
                 label: 'Criado em',
                 render: (row: BookingDTO) => formatInstantToLocal(row.createdAt),
-              },
-              {
-                key: 'actions',
-                label: 'Ações',
-                render: (row: BookingDTO) => (
-                  <button className="ghost-btn" onClick={() => cancelBooking(row.id)}>
-                    Cancelar
-                  </button>
-                ),
               },
             ]}
             getKey={(row) => row.id}

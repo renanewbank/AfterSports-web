@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import ErrorMessage from '../components/ErrorMessage'
 import Loader from '../components/Loader'
 import Table from '../components/Table'
 import { del, get, post, put } from '../lib/api'
 import type { InstructorDTO } from '../types/dto'
 import InstructorForm from './InstructorForm'
+import { AuthContext } from '../auth/AuthContext'
 
 const InstructorsPage = () => {
+  const { user } = useContext(AuthContext)
   const [instructors, setInstructors] = useState<InstructorDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -69,18 +71,20 @@ const InstructorsPage = () => {
     <div className="section">
       <div className="page-title">
         <div>
-          {/* <p className="pill">Instrutores</p> */}
+          <p className="pill">Instrutores</p>
           <h2>Gestão de instrutores</h2>
         </div>
-        <button
-          className="primary-btn"
-          onClick={() => {
-            setShowForm(true)
-            setEditing(null)
-          }}
-        >
-          Novo Instrutor
-        </button>
+        {user && (
+          <button
+            className="primary-btn"
+            onClick={() => {
+              setShowForm(true)
+              setEditing(null)
+            }}
+          >
+            Novo Instrutor
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -95,41 +99,46 @@ const InstructorsPage = () => {
               { key: 'id', label: 'ID' },
               { key: 'name', label: 'Nome' },
               { key: 'sport', label: 'Esporte' },
-              {
-                key: 'actions',
-                label: 'Ações',
-                render: (row) => (
-                  <div className="inline-actions">
-                    <button
-                      className="ghost-btn"
-                      onClick={() => {
-                        setEditing(row)
-                        setShowForm(true)
-                      }}
-                    >
-                      Editar
-                    </button>
-                    <button className="ghost-btn" onClick={() => handleDelete(row.id)}>
-                      Excluir
-                    </button>
-                  </div>
-                ),
-              },
+              ...(user
+                ? [
+                    {
+                      key: 'actions',
+                      label: 'Ações',
+                      render: (row: InstructorDTO) => (
+                        <div className="inline-actions">
+                          <button
+                            className="ghost-btn"
+                            onClick={() => {
+                              setEditing(row)
+                              setShowForm(true)
+                            }}
+                          >
+                            Editar
+                          </button>
+                          <button className="ghost-btn" onClick={() => handleDelete(row.id)}>
+                            Excluir
+                          </button>
+                        </div>
+                      ),
+                    },
+                  ]
+                : []),
             ]}
             getKey={(row) => row.id}
           />
+          {!user && (
+            <p className="muted" style={{ marginTop: '0.5rem' }}>
+              Para criar/editar/excluir, faça login.
+            </p>
+          )}
         </div>
       )}
 
-      {showForm && (
+      {user && showForm && (
         <div className="card section">
           <h3>{editing ? 'Editar instrutor' : 'Novo instrutor'}</h3>
           <InstructorForm
-            initialData={
-              editing
-                ? { ...editing, bio: editing.bio ?? undefined }
-                : undefined
-            }
+            initialData={editing ? { ...editing, bio: editing.bio ?? undefined } : undefined}
             onSubmit={(data) =>
               editing ? handleUpdate(editing.id, data) : handleCreate(data)
             }

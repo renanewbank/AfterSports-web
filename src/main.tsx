@@ -5,13 +5,16 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import './index.css'
 import App from './App.tsx'
+import { AuthProvider } from './auth/AuthContext.tsx'
 
 dayjs.extend(utc)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )
