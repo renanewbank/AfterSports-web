@@ -8,6 +8,7 @@ import { formatDateTime, formatPrice } from '../lib/format'
 import type { InstructorDTO, LessonCreate, LessonDTO, LessonUpdate } from '../types/dto'
 import LessonForm from './LessonForm'
 import { AuthContext } from '../auth/AuthContext'
+import Modal from '../components/Modal'
 
 const LessonsPage = () => {
   const { user } = useContext(AuthContext)
@@ -211,8 +212,13 @@ const LessonsPage = () => {
       )}
 
       {user && showForm && (
-        <div className="card section">
-          <h3>{editing ? 'Editar aula' : 'Nova aula'}</h3>
+        <Modal
+          title={editing ? 'Editar aula' : 'Nova aula'}
+          onClose={() => {
+            setShowForm(false)
+            setEditing(null)
+          }}
+        >
           <LessonForm
             instructors={instructors}
             initialData={editing ?? undefined}
@@ -224,7 +230,7 @@ const LessonsPage = () => {
               setEditing(null)
             }}
           />
-        </div>
+        </Modal>
       )}
     </div>
   )

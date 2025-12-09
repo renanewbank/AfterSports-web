@@ -214,7 +214,7 @@ const LessonForm = ({ instructors, initialData, onSubmit, onCancel }: Props) => 
         </FormField>
 
         {/* CAMPO DE PREÇO COM VÍRGULA (centavos) */}
-        <FormField label="Preço (centavos)" htmlFor="priceCents" error={errors.priceCents}>
+        <FormField label="Preço" htmlFor="priceCents" error={errors.priceCents}>
           <input
             id="priceCents"
             inputMode="numeric"
