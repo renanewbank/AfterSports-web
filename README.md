@@ -173,4 +173,5 @@ Sinta-se à vontade para adaptar.
 
 ### Autor do Projeto
 
-* Renan Oliveira Ewbank
+* César Borba
+* Renan Ewbank
