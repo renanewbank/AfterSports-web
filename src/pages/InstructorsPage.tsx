@@ -6,6 +6,7 @@ import { del, get, post, put } from '../lib/api'
 import type { InstructorDTO } from '../types/dto'
 import InstructorForm from './InstructorForm'
 import { AuthContext } from '../auth/AuthContext'
+import Modal from '../components/Modal'
 
 const InstructorsPage = () => {
   const { user } = useContext(AuthContext)
@@ -135,8 +136,13 @@ const InstructorsPage = () => {
       )}
 
       {user && showForm && (
-        <div className="card section">
-          <h3>{editing ? 'Editar instrutor' : 'Novo instrutor'}</h3>
+        <Modal
+          title={editing ? 'Editar instrutor' : 'Novo instrutor'}
+          onClose={() => {
+            setShowForm(false)
+            setEditing(null)
+          }}
+        >
           <InstructorForm
             initialData={editing ? { ...editing, bio: editing.bio ?? undefined } : undefined}
             onSubmit={(data) =>
@@ -147,7 +153,7 @@ const InstructorsPage = () => {
               setEditing(null)
             }}
           />
-        </div>
+        </Modal>
       )}
     </div>
   )
